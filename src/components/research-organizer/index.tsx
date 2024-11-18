@@ -483,10 +483,10 @@ const ResearchPaperOrganizer = () => {
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div
               className={`h-2.5 rounded-full ${storagePercentage > 90
-                  ? 'bg-red-600'
-                  : storagePercentage > 75
-                    ? 'bg-yellow-400'
-                    : 'bg-green-600'
+                ? 'bg-red-600'
+                : storagePercentage > 75
+                  ? 'bg-yellow-400'
+                  : 'bg-green-600'
                 }`}
               style={{ width: `${storagePercentage}%` }}
             ></div>
@@ -511,7 +511,7 @@ const ResearchPaperOrganizer = () => {
         )}
 
         <div className="mb-8 text-center">
-          <p className={`italic text-lg ${styles.text}`}>
+          <p className={`italic text-lg ${styles.text} whitespace-normal break-words max-w-full`}>
             {thesis || 'Enter your thesis in the Outline tab'}
           </p>
         </div>
@@ -577,7 +577,7 @@ const ResearchPaperOrganizer = () => {
                   {outlinePoints.map((point, index) => (
                     <div key={point.id} className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium flex-grow">
+                        <p className="font-medium flex-grow whitespace-normal break-words">
                           {index + 1}. {point.text}
                         </p>
                         <Button
@@ -716,9 +716,9 @@ const ResearchPaperOrganizer = () => {
                     {researchEntries
                       .filter(entry => entry.pointId === selectedPointId)
                       .map(entry => (
-                        <div key={entry.id} className="p-4 bg-white rounded-lg border">
-                          <p className="mb-2">{entry.text}</p>
-                          <p className="text-sm text-gray-600">
+                        <div key={entry.id} className="ml-4 p-4 bg-white rounded">
+                          <p className="mb-2 whitespace-normal break-words">{entry.text}</p>
+                          <p className="text-sm text-gray-600 whitespace-normal break-words">
                             Source: {formatCitation(entry.bibliography, citationStyle)}
                           </p>
                           <Button
@@ -767,7 +767,7 @@ const ResearchPaperOrganizer = () => {
                 <div className="space-y-6">
                   {outlinePoints.map((point, index) => (
                     <div key={point.id} className="space-y-4">
-                      <h2 className={`text-xl font-bold ${styles.heading}`}>
+                      <h2 className={`text-xl font-bold ${styles.heading} whitespace-normal break-words`}>
                         {index + 1}. {point.text}
                       </h2>
 
@@ -775,8 +775,8 @@ const ResearchPaperOrganizer = () => {
                         .filter(entry => entry.pointId === point.id)
                         .map(entry => (
                           <div key={entry.id} className="ml-4 p-4 bg-white rounded">
-                            <p className="mb-2">{entry.text}</p>
-                            <p className="text-sm text-gray-600">
+                            <p className="mb-2 whitespace-normal break-words">{entry.text}</p>
+                            <p className="text-sm text-gray-600 whitespace-normal break-words">
                               Source: {formatCitation(entry.bibliography, citationStyle)}
                             </p>
                           </div>
@@ -784,7 +784,7 @@ const ResearchPaperOrganizer = () => {
 
                       {point.children.map((subPoint, subIndex) => (
                         <div key={subPoint.id} className="ml-6 space-y-2">
-                          <h3 className={`text-lg font-semibold ${styles.heading}`}>
+                          <h3 className={`text-lg font-semibold ${styles.heading} whitespace-normal break-words`}>
                             {String.fromCharCode(97 + subIndex)}. {subPoint.text}
                           </h3>
 
@@ -792,8 +792,8 @@ const ResearchPaperOrganizer = () => {
                             .filter(entry => entry.pointId === subPoint.id)
                             .map(entry => (
                               <div key={entry.id} className="ml-4 p-4 bg-white rounded">
-                                <p className="mb-2">{entry.text}</p>
-                                <p className="text-sm text-gray-600">
+                                <p className="mb-2 whitespace-normal break-words">{entry.text}</p>
+                                <p className="text-sm text-gray-600 whitespace-normal break-words">
                                   Source: {formatCitation(entry.bibliography, citationStyle)}
                                 </p>
                               </div>
