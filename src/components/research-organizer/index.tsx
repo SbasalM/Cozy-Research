@@ -12,6 +12,7 @@ import { Coffee, PlusCircle, Save, FileDown, X, ArrowUp, ArrowDown } from 'lucid
 // Type definitions
 type SourceType = 'book' | 'journal' | 'website' | 'newspaper' | 'chapter';
 type CitationStyle = 'turabian' | 'apa' | 'mla' | 'chicago' | 'ieee';
+type BibEntryKey = keyof BibEntry;
 
 interface BibEntry {
   sourceType: SourceType;
@@ -358,14 +359,14 @@ const handleExport = () => {
 
 // Helper function for source type fields
 const getSourceTypeFields = (sourceType: SourceType) => {
-  const commonFields = [
+  const commonFields: Array<{key: BibEntryKey; label: string; required: boolean}> = [
     { key: 'author', label: 'Author(s) (Last Name, First Name)', required: true },
     { key: 'title', label: 'Title', required: true },
     { key: 'year', label: 'Year', required: true },
     { key: 'doi', label: 'DOI (if available)', required: false }
   ];
 
-  const sourceTypeFields = {
+  const sourceTypeFields: Record<SourceType, Array<{key: BibEntryKey; label: string; required: boolean}>> = {
     book: [
       { key: 'publisher', label: 'Publisher', required: true },
       { key: 'city', label: 'City of Publication', required: true },
