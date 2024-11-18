@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Coffee, PlusCircle, Save, FileDown, X, ArrowUp, ArrowDown } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 
 // Type definitions
 type SourceType = 'book' | 'journal' | 'website' | 'newspaper' | 'chapter';
