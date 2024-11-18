@@ -56,7 +56,8 @@ const ResearchPaperOrganizer = () => {
   const [thesis, setThesis] = useState('');
   const [outlinePoints, setOutlinePoints] = useState<OutlinePoint[]>([]);
   const [currentPointText, setCurrentPointText] = useState('');
-  const [currentLevel, setCurrentLevel] = useState<'main' | 'sub'>('main');
+  type Level = 'main' | 'sub';
+  const [currentLevel, setCurrentLevel] = useState<Level>('main');
   const [selectedParentId, setSelectedParentId] = useState('');
   const [selectedPointId, setSelectedPointId] = useState('');
   const [researchText, setResearchText] = useState('');
@@ -438,7 +439,10 @@ return (
                     onChange={(e) => setCurrentPointText(e.target.value)}
                     className={styles.input}
                   />
-                  <Select value={currentLevel} onValueChange={setCurrentLevel}>
+                  <Select 
+                    value={currentLevel} 
+                    onValueChange={(value: Level) => setCurrentLevel(value)}
+                  >
                     <SelectTrigger className={`w-32 ${styles.select}`}>
                       <SelectValue placeholder="Level" />
                     </SelectTrigger>
