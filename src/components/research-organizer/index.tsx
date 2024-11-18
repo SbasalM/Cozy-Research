@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,18 @@ interface OutlinePoint {
   children: OutlinePoint[];
 }
 
+const calculateStorageSize = (thesis: string, outlinePoints: any[], researchEntries: any[]) => {
+  const data = JSON.stringify({
+    thesis,
+    outlinePoints,
+    researchEntries
+  });
+  return (new Blob([data]).size) / (1024 * 1024);
+};
+
+const STORAGE_LIMIT = 4.5;
+const MAX_STORAGE = 5;
+
 const ResearchPaperOrganizer = () => {
   // State management
   const currentDate = new Date().toISOString().split('T')[0];
@@ -63,6 +75,7 @@ const ResearchPaperOrganizer = () => {
   const [selectedPointId, setSelectedPointId] = useState('');
   const [researchText, setResearchText] = useState('');
   const [researchEntries, setResearchEntries] = useState<ResearchEntry[]>([]);
+  const [storageWarning, setStorageWarning] = useState<string>('');
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('turabian');
 
   // Empty bibliography entry template
@@ -107,7 +120,58 @@ const ResearchPaperOrganizer = () => {
     deleteButton: "text-red-500 hover:text-red-700",
     bibliographySection: "bg-white p-4 rounded-lg border border-[#D4BFA0]"
   };
+// Load data on mount
+useEffect(() => {
+  try {
+    const savedThesis = localStorage.getItem('thesis');
+    const savedOutlinePoints = localStorage.getItem('outlinePoints');
+    const savedResearchEntries = localStorage.getItem('researchEntries');
 
+    if (savedThesis) setThesis(savedThesis);
+    if (savedOutlinePoints) setOutlinePoints(JSON.parse(savedOutlinePoints));
+    if (savedResearchEntries) setResearchEntries(JSON.parse(savedResearchEntries));
+  } catch (error) {
+    console.error('Error loading saved data:', error);
+  }
+}, []);
+
+// Check storage size
+useEffect(() => {
+  const currentSize = calculateStorageSize(thesis, outlinePoints, researchEntries);
+  
+  if (currentSize >= MAX_STORAGE) {
+    setStorageWarning('Storage limit reached. Please export your work to continue.');
+  } else if (currentSize >= STORAGE_LIMIT) {
+    setStorageWarning("You're approaching the storage limit. Consider exporting your work to ensure nothing is lost.");
+  } else {
+    setStorageWarning('');
+  }
+}, [thesis, outlinePoints, researchEntries]);
+
+// Save effects
+useEffect(() => {
+  try {
+    localStorage.setItem('thesis', thesis);
+  } catch (error) {
+    setStorageWarning('Unable to save changes. Please export your work.');
+  }
+}, [thesis]);
+
+useEffect(() => {
+  try {
+    localStorage.setItem('outlinePoints', JSON.stringify(outlinePoints));
+  } catch (error) {
+    setStorageWarning('Unable to save changes. Please export your work.');
+  }
+}, [outlinePoints]);
+
+useEffect(() => {
+  try {
+    localStorage.setItem('researchEntries', JSON.stringify(researchEntries));
+  } catch (error) {
+    setStorageWarning('Unable to save changes. Please export your work.');
+  }
+}, [researchEntries]);
   // Function to format citations for each style
   const formatCitation = (bib: BibEntry, style: CitationStyle): string => {
     switch (style) {
@@ -408,6 +472,24 @@ return (
           <Coffee className="h-8 w-8 text-[#8B593E]" />
           <h1 className={`${styles.heading} text-2xl font-bold`}>Cozy Research Assistant</h1>
         </div>
+        
+        {/* Add the warning banner here */}
+        {storageWarning && (
+          <div className="w-full bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  {storageWarning}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}        
 
         <div className="mb-8 text-center">
           <p className={`italic text-lg ${styles.text}`}>
