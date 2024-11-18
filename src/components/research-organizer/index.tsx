@@ -76,6 +76,7 @@ const ResearchPaperOrganizer = () => {
   const [researchText, setResearchText] = useState('');
   const [researchEntries, setResearchEntries] = useState<ResearchEntry[]>([]);
   const [storageWarning, setStorageWarning] = useState<string>('');
+  const [storagePercentage, setStoragePercentage] = useState(0);
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('turabian');
 
   // Empty bibliography entry template
@@ -120,58 +121,60 @@ const ResearchPaperOrganizer = () => {
     deleteButton: "text-red-500 hover:text-red-700",
     bibliographySection: "bg-white p-4 rounded-lg border border-[#D4BFA0]"
   };
-// Load data on mount
-useEffect(() => {
-  try {
-    const savedThesis = localStorage.getItem('thesis');
-    const savedOutlinePoints = localStorage.getItem('outlinePoints');
-    const savedResearchEntries = localStorage.getItem('researchEntries');
+  // Load data on mount
+  useEffect(() => {
+    try {
+      const savedThesis = localStorage.getItem('thesis');
+      const savedOutlinePoints = localStorage.getItem('outlinePoints');
+      const savedResearchEntries = localStorage.getItem('researchEntries');
 
-    if (savedThesis) setThesis(savedThesis);
-    if (savedOutlinePoints) setOutlinePoints(JSON.parse(savedOutlinePoints));
-    if (savedResearchEntries) setResearchEntries(JSON.parse(savedResearchEntries));
-  } catch (error) {
-    console.error('Error loading saved data:', error);
-  }
-}, []);
+      if (savedThesis) setThesis(savedThesis);
+      if (savedOutlinePoints) setOutlinePoints(JSON.parse(savedOutlinePoints));
+      if (savedResearchEntries) setResearchEntries(JSON.parse(savedResearchEntries));
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+    }
+  }, []);
 
-// Check storage size
-useEffect(() => {
-  const currentSize = calculateStorageSize(thesis, outlinePoints, researchEntries);
-  
-  if (currentSize >= MAX_STORAGE) {
-    setStorageWarning('Storage limit reached. Please export your work to continue.');
-  } else if (currentSize >= STORAGE_LIMIT) {
-    setStorageWarning("You're approaching the storage limit. Consider exporting your work to ensure nothing is lost.");
-  } else {
-    setStorageWarning('');
-  }
-}, [thesis, outlinePoints, researchEntries]);
+  // Check storage size
+  useEffect(() => {
+    const currentSize = calculateStorageSize(thesis, outlinePoints, researchEntries);
+    const percentage = (currentSize / MAX_STORAGE) * 100;
+    setStoragePercentage(Math.min(percentage, 100));
 
-// Save effects
-useEffect(() => {
-  try {
-    localStorage.setItem('thesis', thesis);
-  } catch (error) {
-    setStorageWarning('Unable to save changes. Please export your work.');
-  }
-}, [thesis]);
+    if (currentSize >= MAX_STORAGE) {
+      setStorageWarning("Storage limit reached. Please export your work to continue.");
+    } else if (currentSize >= STORAGE_LIMIT) {
+      setStorageWarning(`You're approaching the storage limit. Consider exporting your work to ensure nothing is lost.`);
+    } else {
+      setStorageWarning("");
+    }
+  }, [thesis, outlinePoints, researchEntries]);
 
-useEffect(() => {
-  try {
-    localStorage.setItem('outlinePoints', JSON.stringify(outlinePoints));
-  } catch (error) {
-    setStorageWarning('Unable to save changes. Please export your work.');
-  }
-}, [outlinePoints]);
+  // Save effects
+  useEffect(() => {
+    try {
+      localStorage.setItem('thesis', thesis);
+    } catch (error) {
+      setStorageWarning('Unable to save changes. Please export your work.');
+    }
+  }, [thesis]);
 
-useEffect(() => {
-  try {
-    localStorage.setItem('researchEntries', JSON.stringify(researchEntries));
-  } catch (error) {
-    setStorageWarning('Unable to save changes. Please export your work.');
-  }
-}, [researchEntries]);
+  useEffect(() => {
+    try {
+      localStorage.setItem('outlinePoints', JSON.stringify(outlinePoints));
+    } catch (error) {
+      setStorageWarning('Unable to save changes. Please export your work.');
+    }
+  }, [outlinePoints]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('researchEntries', JSON.stringify(researchEntries));
+    } catch (error) {
+      setStorageWarning('Unable to save changes. Please export your work.');
+    }
+  }, [researchEntries]);
   // Function to format citations for each style
   const formatCitation = (bib: BibEntry, style: CitationStyle): string => {
     switch (style) {
@@ -248,79 +251,79 @@ useEffect(() => {
     }
   };
 
-// Handler functions
-const handleAddPoint = () => {
-  if (!currentPointText.trim()) return;
+  // Handler functions
+  const handleAddPoint = () => {
+    if (!currentPointText.trim()) return;
 
-  const newPoint = {
-    id: Date.now().toString(),
-    text: currentPointText,
-    level: currentLevel,
-    children: []
+    const newPoint = {
+      id: Date.now().toString(),
+      text: currentPointText,
+      level: currentLevel,
+      children: []
+    };
+
+    if (currentLevel === 'main') {
+      setOutlinePoints([...outlinePoints, newPoint]);
+    } else {
+      const updatedPoints = outlinePoints.map(point => {
+        if (point.id === selectedParentId) {
+          return {
+            ...point,
+            children: [...point.children, newPoint]
+          };
+        }
+        return point;
+      });
+      setOutlinePoints(updatedPoints);
+    }
+
+    setCurrentPointText('');
   };
 
-  if (currentLevel === 'main') {
-    setOutlinePoints([...outlinePoints, newPoint]);
-  } else {
-    const updatedPoints = outlinePoints.map(point => {
-      if (point.id === selectedParentId) {
-        return {
-          ...point,
-          children: [...point.children, newPoint]
-        };
-      }
-      return point;
-    });
-    setOutlinePoints(updatedPoints);
-  }
-
-  setCurrentPointText('');
-};
-
-const handleDeletePoint = (pointId: string, parentId: string | null = null) => {
-  if (parentId) {
-    setOutlinePoints(outlinePoints.map(point => {
-      if (point.id === parentId) {
-        return {
-          ...point,
-          children: point.children.filter(child => child.id !== pointId)
-        };
-      }
-      return point;
-    }));
-  } else {
-    setOutlinePoints(outlinePoints.filter(point => point.id !== pointId));
-  }
-  setResearchEntries(researchEntries.filter(entry => entry.pointId !== pointId));
-};
-
-const movePoint = (index: number, direction: 'up' | 'down') => {
-  const newPoints = [...outlinePoints];
-  if (direction === 'up' && index > 0) {
-    [newPoints[index], newPoints[index - 1]] = [newPoints[index - 1], newPoints[index]];
-  } else if (direction === 'down' && index < newPoints.length - 1) {
-    [newPoints[index], newPoints[index + 1]] = [newPoints[index + 1], newPoints[index]];
-  }
-  setOutlinePoints(newPoints);
-};
-
-const handleAddResearch = () => {
-  if (!selectedPointId || !researchText.trim()) return;
-
-  const newEntry = {
-    id: Date.now().toString(),
-    pointId: selectedPointId,
-    text: researchText,
-    bibliography: { ...bibEntry }
+  const handleDeletePoint = (pointId: string, parentId: string | null = null) => {
+    if (parentId) {
+      setOutlinePoints(outlinePoints.map(point => {
+        if (point.id === parentId) {
+          return {
+            ...point,
+            children: point.children.filter(child => child.id !== pointId)
+          };
+        }
+        return point;
+      }));
+    } else {
+      setOutlinePoints(outlinePoints.filter(point => point.id !== pointId));
+    }
+    setResearchEntries(researchEntries.filter(entry => entry.pointId !== pointId));
   };
 
-  setResearchEntries([...researchEntries, newEntry]);
-  setResearchText('');
-  setBibEntry(emptyBibEntry);
-};
+  const movePoint = (index: number, direction: 'up' | 'down') => {
+    const newPoints = [...outlinePoints];
+    if (direction === 'up' && index > 0) {
+      [newPoints[index], newPoints[index - 1]] = [newPoints[index - 1], newPoints[index]];
+    } else if (direction === 'down' && index < newPoints.length - 1) {
+      [newPoints[index], newPoints[index + 1]] = [newPoints[index + 1], newPoints[index]];
+    }
+    setOutlinePoints(newPoints);
+  };
 
-const handleExport = () => {
-  const content = `
+  const handleAddResearch = () => {
+    if (!selectedPointId || !researchText.trim()) return;
+
+    const newEntry = {
+      id: Date.now().toString(),
+      pointId: selectedPointId,
+      text: researchText,
+      bibliography: { ...bibEntry }
+    };
+
+    setResearchEntries([...researchEntries, newEntry]);
+    setResearchText('');
+    setBibEntry(emptyBibEntry);
+  };
+
+  const handleExport = () => {
+    const content = `
     <html>
     <head>
       <style>
@@ -376,8 +379,8 @@ const handleExport = () => {
       ${outlinePoints.map((point, index) => `
         <h2>${index + 1}. ${point.text}</h2>
         ${researchEntries
-          .filter(entry => entry.pointId === point.id)
-          .map(entry => `
+        .filter(entry => entry.pointId === point.id)
+        .map(entry => `
             <div class="research-entry">
               <p>${entry.text}</p>
               <p class="citation">Source: ${formatCitation(entry.bibliography, citationStyle)}</p>
@@ -399,9 +402,9 @@ const handleExport = () => {
       
       <div class="bibliography">
         <h2>Bibliography</h2>
-        ${[...new Set(researchEntries.map(entry => 
-          formatCitation(entry.bibliography, citationStyle)
-        ))]
+        ${[...new Set(researchEntries.map(entry =>
+              formatCitation(entry.bibliography, citationStyle)
+            ))]
         .sort()
         .map(citation => `<p class="bibliography-entry">${citation}</p>`)
         .join('')}
@@ -410,69 +413,85 @@ const handleExport = () => {
     </html>
   `;
 
-  const blob = new Blob([content], { 
-    type: 'application/msword'
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'research-paper.doc';
-  link.click();
-  URL.revokeObjectURL(url);
-};
-
-// Helper function for source type fields
-const getSourceTypeFields = (sourceType: SourceType) => {
-  const commonFields: Array<{key: BibEntryKey; label: string; required: boolean}> = [
-    { key: 'author', label: 'Author(s) (Last Name, First Name)', required: true },
-    { key: 'title', label: 'Title', required: true },
-    { key: 'year', label: 'Year', required: true },
-    { key: 'doi', label: 'DOI (if available)', required: false }
-  ];
-
-  const sourceTypeFields: Record<SourceType, Array<{key: BibEntryKey; label: string; required: boolean}>> = {
-    book: [
-      { key: 'publisher', label: 'Publisher', required: true },
-      { key: 'city', label: 'City of Publication', required: true },
-      { key: 'edition', label: 'Edition', required: false }
-    ],
-    journal: [
-      { key: 'journalName', label: 'Journal Name', required: true },
-      { key: 'volume', label: 'Volume', required: true },
-      { key: 'issue', label: 'Issue', required: true },
-      { key: 'pages', label: 'Pages', required: true }
-    ],
-    website: [
-      { key: 'websiteName', label: 'Website Name', required: true },
-      { key: 'organization', label: 'Organization', required: true },
-      { key: 'url', label: 'URL', required: true },
-      { key: 'accessDate', label: 'Access Date', required: true }
-    ],
-    newspaper: [
-      { key: 'newspaperName', label: 'Newspaper Name', required: true },
-      { key: 'pages', label: 'Page Numbers', required: false }
-    ],
-    chapter: [
-      { key: 'bookTitle', label: 'Book Title', required: true },
-      { key: 'editors', label: 'Editor(s)', required: true },
-      { key: 'publisher', label: 'Publisher', required: true },
-      { key: 'chapterPages', label: 'Chapter Pages', required: true }
-    ]
+    const blob = new Blob([content], {
+      type: 'application/msword'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'research-paper.doc';
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  return [...commonFields, ...sourceTypeFields[sourceType]];
-};
+  // Helper function for source type fields
+  const getSourceTypeFields = (sourceType: SourceType) => {
+    const commonFields: Array<{ key: BibEntryKey; label: string; required: boolean }> = [
+      { key: 'author', label: 'Author(s) (Last Name, First Name)', required: true },
+      { key: 'title', label: 'Title', required: true },
+      { key: 'year', label: 'Year', required: true },
+      { key: 'doi', label: 'DOI (if available)', required: false }
+    ];
 
-// Return JSX continues in Part 3...
+    const sourceTypeFields: Record<SourceType, Array<{ key: BibEntryKey; label: string; required: boolean }>> = {
+      book: [
+        { key: 'publisher', label: 'Publisher', required: true },
+        { key: 'city', label: 'City of Publication', required: true },
+        { key: 'edition', label: 'Edition', required: false }
+      ],
+      journal: [
+        { key: 'journalName', label: 'Journal Name', required: true },
+        { key: 'volume', label: 'Volume', required: true },
+        { key: 'issue', label: 'Issue', required: true },
+        { key: 'pages', label: 'Pages', required: true }
+      ],
+      website: [
+        { key: 'websiteName', label: 'Website Name', required: true },
+        { key: 'organization', label: 'Organization', required: true },
+        { key: 'url', label: 'URL', required: true },
+        { key: 'accessDate', label: 'Access Date', required: true }
+      ],
+      newspaper: [
+        { key: 'newspaperName', label: 'Newspaper Name', required: true },
+        { key: 'pages', label: 'Page Numbers', required: false }
+      ],
+      chapter: [
+        { key: 'bookTitle', label: 'Book Title', required: true },
+        { key: 'editors', label: 'Editor(s)', required: true },
+        { key: 'publisher', label: 'Publisher', required: true },
+        { key: 'chapterPages', label: 'Chapter Pages', required: true }
+      ]
+    };
 
-return (
+    return [...commonFields, ...sourceTypeFields[sourceType]];
+  };
+
+  // Return JSX continues in Part 3...
+
+  return (
     <div className={styles.container}>
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-center mb-6 space-x-2">
           <Coffee className="h-8 w-8 text-[#8B593E]" />
           <h1 className={`${styles.heading} text-2xl font-bold`}>Cozy Research Assistant</h1>
         </div>
-        
+        <div className="w-full max-w-xs mx-auto mb-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-gray-600">Storage Used</span>
+            <span className="text-gray-600">{storagePercentage.toFixed(1)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              className={`h-2.5 rounded-full ${storagePercentage > 90
+                  ? 'bg-red-600'
+                  : storagePercentage > 75
+                    ? 'bg-yellow-400'
+                    : 'bg-green-600'
+                }`}
+              style={{ width: `${storagePercentage}%` }}
+            ></div>
+          </div>
+        </div>
         {/* Add the warning banner here */}
         {storageWarning && (
           <div className="w-full bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
@@ -489,11 +508,11 @@ return (
               </div>
             </div>
           </div>
-        )}        
+        )}
 
         <div className="mb-8 text-center">
           <p className={`italic text-lg ${styles.text}`}>
-            {thesis || 'Enter your thesis in Phase 1'}
+            {thesis || 'Enter your thesis in the Outline tab'}
           </p>
         </div>
 
@@ -522,8 +541,8 @@ return (
                     onChange={(e) => setCurrentPointText(e.target.value)}
                     className={styles.input}
                   />
-                  <Select 
-                    value={currentLevel} 
+                  <Select
+                    value={currentLevel}
                     onValueChange={(value: Level) => setCurrentLevel(value)}
                   >
                     <SelectTrigger className={`w-32 ${styles.select}`}>
@@ -641,10 +660,10 @@ return (
 
                 <div className={`space-y-4 ${styles.bibliographySection}`}>
                   <h3 className="font-semibold">Bibliography Information</h3>
-                  
-                  <Select 
-                    value={bibEntry.sourceType} 
-                    onValueChange={(value: SourceType) => setBibEntry({...bibEntry, sourceType: value})}
+
+                  <Select
+                    value={bibEntry.sourceType}
+                    onValueChange={(value: SourceType) => setBibEntry({ ...bibEntry, sourceType: value })}
                   >
                     <SelectTrigger className={styles.select}>
                       <SelectValue placeholder="Select source type" />
@@ -669,14 +688,14 @@ return (
                           <Input
                             type="date"
                             value={bibEntry[field.key]}
-                            onChange={(e) => setBibEntry({...bibEntry, [field.key]: e.target.value})}
+                            onChange={(e) => setBibEntry({ ...bibEntry, [field.key]: e.target.value })}
                             className={styles.input}
                             required={field.required}
                           />
                         ) : (
                           <Input
                             value={bibEntry[field.key]}
-                            onChange={(e) => setBibEntry({...bibEntry, [field.key]: e.target.value})}
+                            onChange={(e) => setBibEntry({ ...bibEntry, [field.key]: e.target.value })}
                             className={styles.input}
                             required={field.required}
                           />
@@ -751,7 +770,7 @@ return (
                       <h2 className={`text-xl font-bold ${styles.heading}`}>
                         {index + 1}. {point.text}
                       </h2>
-                      
+
                       {researchEntries
                         .filter(entry => entry.pointId === point.id)
                         .map(entry => (
@@ -768,7 +787,7 @@ return (
                           <h3 className={`text-lg font-semibold ${styles.heading}`}>
                             {String.fromCharCode(97 + subIndex)}. {subPoint.text}
                           </h3>
-                          
+
                           {researchEntries
                             .filter(entry => entry.pointId === subPoint.id)
                             .map(entry => (
