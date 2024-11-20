@@ -1,0 +1,32 @@
+# Exclude binary files and compiled code
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.a
+*.out
+
+# Exclude temporary files and directories
+*.tmp
+*.temp
+*.log
+*.cache/
+*.bak
+__pycache__/
+
+# Keep main code directories for complete context
+# Retain documentation by removing assets
+assets/
+images/
+examples/
+
+# Retain core test structures but exclude non-essential data
+tests/output/
+*.test.js
+*.spec.js
+
+# Exclude environment and setup files that aren't critical for understanding the code logic
+.env
+.env.example
+*.lock
