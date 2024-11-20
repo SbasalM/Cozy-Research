@@ -20,7 +20,7 @@ const ImageTextExtractor = ({ onExtractedText }) => {
     width: 0,
     height: 0
   });
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -43,7 +43,7 @@ const ImageTextExtractor = ({ onExtractedText }) => {
             videoRef.current.srcObject = stream;
             const videoTrack = stream.getVideoTracks()[0];
             setCurrentTrack(videoTrack);
-            
+
             videoRef.current.onloadedmetadata = async () => {
               try {
                 await videoRef.current?.play();
@@ -139,14 +139,14 @@ const ImageTextExtractor = ({ onExtractedText }) => {
 
   const captureScreenshot = async () => {
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ 
+      const stream = await navigator.mediaDevices.getDisplayMedia({
         preferCurrentTab: true,
         video: { displaySurface: "monitor" }
       });
-      
+
       const video = document.createElement('video');
       video.srcObject = stream;
-      
+
       await new Promise((resolve) => {
         video.onloadedmetadata = () => {
           video.play();
@@ -173,12 +173,12 @@ const ImageTextExtractor = ({ onExtractedText }) => {
 
   const captureImage = () => {
     if (!videoRef.current || !videoStarted) return;
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
-    
+
     if (ctx && videoRef.current) {
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const imageData = canvas.toDataURL('image/jpeg');
@@ -227,55 +227,56 @@ const ImageTextExtractor = ({ onExtractedText }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex space-x-2">
+      {/* Mobile-optimized button layout */}
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2">
         <Button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center space-x-2"
+          className="flex items-center justify-center space-x-2 w-full sm:w-auto"
           disabled={cameraActive || isProcessing || isCropping}
         >
           <Upload className="w-4 h-4" />
-          <span>Upload</span>
+          <span className="text-white">Upload</span>
         </Button>
 
         <Button
           onClick={handleCameraToggle}
-          className="flex items-center space-x-2"
+          className="flex items-center justify-center space-x-2 w-full sm:w-auto"
           disabled={image !== null || isProcessing}
         >
           <Camera className="w-4 h-4" />
-          <span>{cameraActive ? 'Stop Camera' : 'Start Camera'}</span>
+          <span className="text-white">{cameraActive ? 'Stop' : 'Camera'}</span>
         </Button>
 
-        {cameraActive && videoStarted && (
+        {cameraActive && videoStarted ? (
           <>
             <Button
               onClick={toggleFlashlight}
-              className="flex items-center space-x-2"
+              className="flex items-center justify-center space-x-2 w-full sm:w-auto col-span-1"
               disabled={!currentTrack?.getCapabilities()?.torch}
             >
               <Flashlight className={`w-4 h-4 ${flashlightOn ? 'text-yellow-400' : ''}`} />
-              <span>{flashlightOn ? 'Light Off' : 'Light On'}</span>
+              <span className="text-white">{flashlightOn ? 'Light Off' : 'Light'}</span>
             </Button>
 
             <Button 
               onClick={captureImage} 
               disabled={isProcessing}
-              className="flex items-center space-x-2"
+              className="flex items-center justify-center space-x-2 w-full sm:w-auto col-span-1"
             >
               <Camera className="w-4 h-4" />
-              <span>Capture</span>
+              <span className="text-white">Capture</span>
             </Button>
           </>
+        ) : (
+          <Button
+            onClick={captureScreenshot}
+            className="flex items-center justify-center space-x-2 w-full sm:w-auto col-span-2 sm:col-span-1"
+            disabled={cameraActive || isProcessing || isCropping}
+          >
+            <Monitor className="w-4 h-4" />
+            <span className="text-white">Screenshot</span>
+          </Button>
         )}
-
-        <Button
-          onClick={captureScreenshot}
-          className="flex items-center space-x-2"
-          disabled={cameraActive || isProcessing || isCropping}
-        >
-          <Monitor className="w-4 h-4" />
-          <span>Screenshot</span>
-        </Button>
       </div>
 
       <input
@@ -287,8 +288,8 @@ const ImageTextExtractor = ({ onExtractedText }) => {
       />
 
       {cameraActive && (
-        <Card className="p-2">
-          <div className="relative w-full h-[400px] bg-black flex items-center justify-center">
+        <Card className="p-2 bg-black">
+          <div className="relative w-full h-[400px] flex items-center justify-center">
             <video
               ref={videoRef}
               autoPlay
@@ -314,15 +315,18 @@ const ImageTextExtractor = ({ onExtractedText }) => {
                     ref={imageRef}
                     src={image}
                     alt="To crop"
-                    className="max-h-[400px] object-contain"
+                    className="max-h-[400px] w-full object-contain"
                   />
                 </ReactCrop>
                 <div className="flex justify-end space-x-2 mt-2">
                   <Button variant="outline" onClick={clearImage}>
-                    Cancel
+                    <span className="text-[#4A2B1B]">Cancel</span>
                   </Button>
-                  <Button onClick={handleCrop} disabled={!crop.width || !crop.height}>
-                    Crop & Continue
+                  <Button 
+                    onClick={handleCrop} 
+                    disabled={!crop.width || !crop.height}
+                  >
+                    <span className="text-white">Crop & Continue</span>
                   </Button>
                 </div>
               </div>
@@ -331,7 +335,7 @@ const ImageTextExtractor = ({ onExtractedText }) => {
                 <img
                   src={image}
                   alt="Selected"
-                  className="w-full max-h-[400px] object-contain"
+                  className="max-h-[400px] w-full object-contain"
                 />
                 <Button
                   variant="ghost"
@@ -343,10 +347,10 @@ const ImageTextExtractor = ({ onExtractedText }) => {
                 </Button>
                 <div className="flex justify-end space-x-2 mt-2">
                   <Button variant="outline" onClick={clearImage}>
-                    Cancel
+                    <span className="text-[#4A2B1B]">Cancel</span>
                   </Button>
                   <Button onClick={() => processImage(image)}>
-                    Extract Text
+                    <span className="text-white">Extract Text</span>
                   </Button>
                 </div>
               </>
@@ -356,7 +360,7 @@ const ImageTextExtractor = ({ onExtractedText }) => {
       )}
 
       {isProcessing && (
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-[#4A2B1B]">
           Processing image...
         </div>
       )}
