@@ -5,7 +5,11 @@ import { Card } from '@/components/ui/card';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
-const ImageTextExtractor = ({ onExtractedText }) => {
+interface ImageTextExtractorProps {
+  onExtractedText: (text: string) => void;
+}
+
+const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText }) => {
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
