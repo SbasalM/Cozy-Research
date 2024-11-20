@@ -30,3 +30,5 @@ tests/output/
 .env
 .env.example
 *.lock
+*config/google/vision-credentials.json
+*.env.local
