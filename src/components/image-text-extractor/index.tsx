@@ -9,6 +9,10 @@ interface ImageTextExtractorProps {
   onExtractedText: (text: string) => void;
 }
 
+interface ExtendedMediaTrackCapabilities extends MediaTrackCapabilities {
+  torch?: boolean;
+}
+
 const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText }) => {
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -76,7 +80,7 @@ const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText
 
   const toggleFlashlight = async () => {
     if (currentTrack) {
-      const capabilities = currentTrack.getCapabilities();
+      const capabilities = currentTrack.getCapabilities() as ExtendedMediaTrackCapabilities;
       if (capabilities.torch) {
         try {
           await currentTrack.applyConstraints({
