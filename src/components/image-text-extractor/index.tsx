@@ -13,6 +13,14 @@ interface ExtendedMediaTrackCapabilities extends MediaTrackCapabilities {
   torch?: boolean;
 }
 
+interface TorchConstraint {
+  torch: boolean;
+}
+
+interface ExtendedMediaTrackConstraintSet extends MediaTrackConstraintSet {
+  advanced?: TorchConstraint[];
+}
+
 const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText }) => {
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -83,9 +91,10 @@ const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText
       const capabilities = currentTrack.getCapabilities() as ExtendedMediaTrackCapabilities;
       if (capabilities.torch) {
         try {
-          await currentTrack.applyConstraints({
+          const constraints: ExtendedMediaTrackConstraintSet = {
             advanced: [{ torch: !flashlightOn }]
-          });
+          };
+          await currentTrack.applyConstraints(constraints);
           setFlashlightOn(!flashlightOn);
         } catch (err) {
           console.error('Flashlight control failed:', err);
