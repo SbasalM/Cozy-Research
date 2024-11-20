@@ -5,6 +5,13 @@ import { Card } from '@/components/ui/card';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
+interface ExtendedDisplayMediaStreamOptions extends DisplayMediaStreamOptions {
+  preferCurrentTab?: boolean;
+  video?: {
+    displaySurface?: 'monitor' | 'window' | 'browser';
+  };
+}
+
 interface ImageTextExtractorProps {
   onExtractedText: (text: string) => void;
 }
@@ -159,11 +166,10 @@ const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText
       const stream = await navigator.mediaDevices.getDisplayMedia({
         preferCurrentTab: true,
         video: { displaySurface: "monitor" }
-      });
+      } as ExtendedDisplayMediaStreamOptions);
 
       const video = document.createElement('video');
       video.srcObject = stream;
-
       await new Promise((resolve) => {
         video.onloadedmetadata = () => {
           video.play();
@@ -269,14 +275,14 @@ const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText
             <Button
               onClick={toggleFlashlight}
               className="flex items-center justify-center space-x-2 w-full sm:w-auto col-span-1"
-              disabled={!currentTrack?.getCapabilities()?.torch}
+              disabled={!currentTrack?.getCapabilities() || !(currentTrack.getCapabilities() as ExtendedMediaTrackCapabilities).torch}
             >
               <Flashlight className={`w-4 h-4 ${flashlightOn ? 'text-yellow-400' : ''}`} />
               <span className="text-white">{flashlightOn ? 'Light Off' : 'Light'}</span>
             </Button>
 
-            <Button 
-              onClick={captureImage} 
+            <Button
+              onClick={captureImage}
               disabled={isProcessing}
               className="flex items-center justify-center space-x-2 w-full sm:w-auto col-span-1"
             >
@@ -339,8 +345,8 @@ const ImageTextExtractor: React.FC<ImageTextExtractorProps> = ({ onExtractedText
                   <Button variant="outline" onClick={clearImage}>
                     <span className="text-[#4A2B1B]">Cancel</span>
                   </Button>
-                  <Button 
-                    onClick={handleCrop} 
+                  <Button
+                    onClick={handleCrop}
                     disabled={!crop.width || !crop.height}
                   >
                     <span className="text-white">Crop & Continue</span>
